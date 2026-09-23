@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
+<title>Llamada</title>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@1,500;1,600&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+html,body{margin:0;height:100%;background:#1c1416;color:#fff;font-family:Plus Jakarta Sans,sans-serif;overflow:hidden}
+video{background:#000;object-fit:cover}
+#remote{position:absolute;inset:0;width:100%;height:100%}
+#local{position:absolute;right:14px;bottom:110px;width:28vw;max-width:140px;aspect-ratio:3/4;border-radius:14px;z-index:5;border:2px solid #fff3}
+</style>
+</head>
+<body>
+<video id="remote" autoplay playsinline></video>
+<video id="local" autoplay playsinline muted></video>
+<div class="absolute top-0 inset-x-0 p-5 z-10 text-center">
+  <p class="text-[11px] tracking-widest uppercase text-[#d67b88]">Nuestro Espacio</p>
+  <h1 id="who" class="font-serif italic text-2xl mt-1">Llamada</h1>
+  <p id="status" class="text-sm text-white/70 mt-1">Conectando…</p>
+</div>
+<div class="absolute bottom-8 inset-x-0 z-10 flex justify-center gap-5">
+  <button id="btn-cam" class="w-12 h-12 rounded-full bg-white/15 flex items-center justify-center">
+    <span class="material-symbols-outlined">videocam</span>
+  </button>
+  <button id="btn-mic" class="w-12 h-12 rounded-full bg-white/15 flex items-center justify-center">
+    <span class="material-symbols-outlined">mic</span>
+  </button>
+  <button id="btn-end" class="w-14 h-14 rounded-full bg-[#e11d48] flex items-center justify-center">
+    <span class="material-symbols-outlined">call_end</span>
+  </button>
+</div>
+<script src="../js/supabase-client.js"></script>
+<script>
+(function(){
+  if(!localStorage.getItem('keepsake_user')){ location.replace('../index.html'); return; }
+  const me = localStorage.getItem('keepsake_user');
+  const other = me.toLowerCase()==='alessandro' ? 'Mayerli' : 'Alessandro';
+  const tipo = new URLSearchParams(location.search).get('tipo')==='audio' ? 'audio' : 'video';
+  const wantVideo = tipo==='video';
+  document.getElementById('who').textContent = other;
+  const statusEl = document.getElementById('status');
+  const vLocal = document.getElementById('local');
+  const vRemote = document.getElementById('remote');
+  if(!wantVideo) vLocal.style.display='none';
+
+  const pc = new RTCPeerConnection({iceServers:[{urls:['stun:stun.l.google.com:19302','stun:stun1.l.google.com:19302']}]});
+  let localStream=null, poll=null, processed=new Set(), started=false, ending=false;
+  let callId = 'c'+Date.now();
+
+  pc.ontrack = (e)=>{
+    vRemote.srcObject = e.streams[0];
+    statusEl.textContent = 'En llamada';
+  };
+  pc.onicecandidate = async (e)=>{
+    if(!e.candidate) return;
+    await window.KeepsakeDB.insertContenido({
+      seccion:'textos', tipo:'texto', titulo:'ice', comentario:'webrtc',
+      mensaje: JSON.stringify({from:me, callId, candidate:e.candidate})
+    });
+  };
+
+  function parseMsg(raw){
+    if(!raw) return {};
+    try{ return JSON.parse(raw); }catch(e){ return {}; }
+  }
+  function sameCall(msg){
+    if(!msg || !msg.callId) return false;
+    return String(msg.callId)===String(callId);
+  }
+
+  async function signal(titulo, extra){
+    const {data, error} = await window.KeepsakeDB.insertContenido({
+      seccion:'textos', tipo:'texto', titulo, comentario:'webrtc',
+      mensaje: JSON.stringify(Object.assign({from:me, media:tipo, callId}, extra||{}))
+    });
+    if(error) statusEl.textContent = 'Señal BD: '+(error.message||'error');
+    return data;
+  }
+
+  async function setCallState(state){
+    const payload = {from:me, state, at: Date.now(), callId};
+    const all = await window.KeepsakeDB.fetchContenidoAny(['textos']);
+    const row = (all||[]).find(r => (r.comentario||'')==='call_state');
+    if(row) {
+      const {error} = await window.KeepsakeDB.updateContenido(row.id, {mensaje: JSON.stringify(payload), titulo: state});
+      if(error) statusEl.textContent = 'Estado BD: '+(error.message||'error');
+    } else {
+      const {error} = await window.KeepsakeDB.insertContenido({
+        seccion:'textos', tipo:'texto', titulo:state, comentario:'call_state',
+        mensaje: JSON.stringify(payload)
+      });
+      if(error) statusEl.textContent = 'Estado BD: '+(error.message||'error');
+    }
+  }
+
+  async function wipeSignals(){
+    try{ await window.KeepsakeDB.deleteContenidoByComentario(['webrtc']); }catch(e){}
+  }
+
+  async function hangup(send){
+    if(ending) return;
+    ending = true;
+    if(poll){ clearInterval(poll); poll=null; }
+    try{ localStream && localStream.getTracks().forEach(t=>t.stop()); }catch(e){}
+    try{ pc.close(); }catch(e){}
+    if(send){
+      try{ await setCallState('ended'); }catch(e){}
+      try{ await signal('hangup', {ended:true}); }catch(e){}
+    }
+    location.href = 'chat.html';
+  }
+
+  function isFresh(row, ms){
+    if(!row || !row.created_at) return false;
+    return (Date.now() - new Date(row.created_at).getTime()) < (ms||90000);
+  }
+
+  async function start(){
+    if(started) return;
+    started = true;
+    const modo = new URLSearchParams(location.search).get('modo') || 'llamar';
+    try{
+      localStream = await navigator.mediaDevices.getUserMedia({ audio:true, video: wantVideo });
+      vLocal.srcObject = localStream;
+      localStream.getTracks().forEach(t=>pc.addTrack(t, localStream));
+    }catch(e){
+      statusEl.textContent = 'Sin permiso de mic/cámara: '+e.message;
+      return;
+    }
+    const all = await window.KeepsakeDB.fetchContenidoAny(['textos']);
+    const pending = modo==='contestar' ? (all||[]).find(r=>{
+      if((r.comentario||'')!=='webrtc' || r.titulo!=='offer' || !isFresh(r, 120000)) return false;
+      const m=parseMsg(r.mensaje);
+      return m.from && m.from.toLowerCase()!==me.toLowerCase() && m.sdp;
+    }) : null;
+    if(pending){
+      const msg=parseMsg(pending.mensaje);
+      if(msg.callId) callId = msg.callId;
+      processed.add(pending.id);
+      await pc.setRemoteDescription({type:'offer', sdp:msg.sdp});
+      const ans = await pc.createAnswer();
+      await pc.setLocalDescription(ans);
+      await signal('answer', {sdp: ans.sdp});
+      statusEl.textContent = 'En llamada';
+      await setCallState('live');
+    } else if(modo==='contestar'){
+      statusEl.textContent = 'No hay llamada activa. Pídele que marque de nuevo.';
+      return;
+    } else {
+      await wipeSignals();
+      const offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
+      statusEl.textContent = 'Llamando a '+other+'…';
+      await setCallState('ringing');
+      const row = await signal('offer', {sdp: offer.sdp});
+      if(!row){ statusEl.textContent = 'No se pudo crear la oferta en la base.'; return; }
+      await window.KeepsakeDB.createNotificacion({
+        titulo: wantVideo?'Videollamada':'Llamada',
+        mensaje: me+' te está llamando',
+        seccion:'textos', tipo:'texto'
+      });
+    }
+    poll = setInterval(check, 800);
+  }
+
+  async function check(){
+    if(ending) return;
+    const all = await window.KeepsakeDB.fetchContenidoAny(['textos']);
+    const state = (all||[]).find(r => (r.comentario||'')==='call_state');
+    if(state){
+      const st=parseMsg(state.mensaje);
+      if((state.titulo==='ended' || st.state==='ended') && sameCall(st) && (st.from||'').toLowerCase()!==me.toLowerCase()){
+        statusEl.textContent = 'La otra persona colgó';
+        hangup(false);
+        return;
+      }
+    }
+    const rows = (all||[]).filter(r => (r.comentario||'')==='webrtc');
+    for(const r of rows){
+      if(processed.has(r.id)) continue;
+      const msg=parseMsg(r.mensaje);
+      if(!sameCall(msg)) continue;
+      if((msg.from||'').toLowerCase()===me.toLowerCase()) continue;
+      processed.add(r.id);
+      if(r.titulo==='hangup'){
+        statusEl.textContent = 'La otra persona colgó';
+        hangup(false);
+        return;
+      }
+      if(r.titulo==='answer' && msg.sdp && !pc.currentRemoteDescription){
+        await pc.setRemoteDescription({type:'answer', sdp:msg.sdp});
+        statusEl.textContent = 'En llamada';
+        await setCallState('live');
+      }
+      if(r.titulo==='ice' && msg.candidate){
+        try{ await pc.addIceCandidate(msg.candidate); }catch(e){}
+      }
+    }
+  }
+
+  document.getElementById('btn-end').onclick = ()=>hangup(true);
+  document.getElementById('btn-mic').onclick = ()=>{
+    const t = localStream && localStream.getAudioTracks()[0];
+    if(!t) return;
+    t.enabled = !t.enabled;
+    document.getElementById('btn-mic').style.opacity = t.enabled? '1':'0.4';
+  };
+  document.getElementById('btn-cam').onclick = ()=>{
+    const t = localStream && localStream.getVideoTracks()[0];
+    if(!t) return;
+    t.enabled = !t.enabled;
+    document.getElementById('btn-cam').style.opacity = t.enabled? '1':'0.4';
+  };
+
+  document.addEventListener('supabase-ready', start);
+  setTimeout(()=>{ if(!started) start(); }, 800);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/>
+<title>Cartas</title>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..700;1,400..700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config={theme:{extend:{colors:{primary:"#944652","primary-container":"#d67b88","on-primary":"#ffffff",surface:"#fcf9f4","on-surface":"#1c1c19","on-surface-variant":"#534344"},fontFamily:{display:["Playfair Display"],body:["Plus Jakarta Sans"]}}}};
+</script>
+<style>
+html,body{margin:0;width:100%;overflow-x:hidden}body{overscroll-behavior:none;background:#fcf9f4;-webkit-tap-highlight-color:transparent}
+.pb-safe{padding-bottom:env(safe-area-inset-bottom,0)}
+.letter-card{cursor:pointer;transition:transform .15s}.letter-card:active{transform:scale(.98)}.filter-active{background:#d67b88;color:#fff}
+</style>
+</head>
+<body class="font-body text-on-surface min-h-screen flex flex-col">
+<main class="flex-1 px-4 pt-3 pb-28 max-w-lg mx-auto w-full">
+  <div class="flex items-center justify-end mb-2">
+    <button id="btn-add" type="button" class="inline-flex items-center gap-1 px-4 py-2 rounded-full bg-primary-container text-on-primary text-sm font-semibold shadow">
+      <span class="material-symbols-outlined text-[18px]">edit</span> Escribir
+    </button>
+  </div>
+  <div class="flex flex-col items-center text-center mb-2">
+    <h1 class="font-display text-2xl italic font-semibold">Cartas</h1>
+    <p class="text-xs text-on-surface-variant italic" id="page-sub">Toca una carta para leerla completa.</p>
+  </div>
+  <div class="flex p-1 bg-[#ebe8e3] rounded-full mb-2">
+    <button type="button" data-mode="carta" class="mode-btn flex-1 py-1.5 rounded-full text-xs font-semibold bg-white shadow">Cartas</button>
+    <button type="button" data-mode="mensajito" class="mode-btn flex-1 py-1.5 rounded-full text-xs text-on-surface-variant">Mensajitos</button>
+  </div>
+  <div class="flex items-center gap-2 overflow-x-auto pb-2 mb-4">
+    <button type="button" data-filter="todos" class="filter-btn filter-active shrink-0 px-3 py-1.5 rounded-full text-xs font-medium bg-primary-container text-white">Todos</button>
+    <button type="button" data-filter="Alessandro" class="filter-btn shrink-0 px-3 py-1.5 rounded-full bg-white shadow-sm text-xs">Alessandro</button>
+    <button type="button" data-filter="Mayerli" class="filter-btn shrink-0 px-3 py-1.5 rounded-full bg-white shadow-sm text-xs">Mayerli</button>
+  </div>
+  <div id="list" class="space-y-3"></div>
+  <div id="empty" class="flex flex-col items-center text-center py-14">
+    <span class="material-symbols-outlined text-5xl text-primary-container/40 mb-3">mail</span>
+    <p class="font-display text-xl italic text-on-surface-variant">Aún no hay cartas</p>
+    <p class="text-sm text-on-surface-variant mt-1">Escribe la primera nota de amor</p>
+  </div>
+</main>
+
+<!-- Write modal -->
+<div id="modal" class="hidden fixed inset-0 z-[100] bg-black/40 flex items-end sm:items-center justify-center p-4">
+  <div class="bg-white rounded-3xl w-full max-w-md p-5 shadow-xl max-h-[90vh] overflow-y-auto">
+    <h3 class="font-display text-2xl italic mb-4">Nueva carta</h3>
+    <div id="wrap-titulo">
+      <label class="block text-sm mb-1">Título</label>
+      <input id="up-titulo" class="w-full px-3 py-2 rounded-xl bg-[#f6f3ee] mb-3 outline-none text-sm" placeholder="Para ti..."/>
+    </div>
+    <label class="block text-sm mb-1" id="lbl-mensaje">Mensaje</label>
+    <textarea id="up-mensaje" class="w-full px-3 py-2 rounded-xl bg-[#f6f3ee] mb-4 outline-none resize-none text-sm" rows="6" placeholder="Escribe con el corazón..."></textarea>
+    <div class="flex gap-2">
+      <button id="modal-cancel" type="button" class="flex-1 py-2.5 rounded-full bg-[#f0ede9] text-sm">Cancelar</button>
+      <button id="modal-save" type="button" class="flex-1 py-2.5 rounded-full bg-primary-container text-white text-sm font-semibold">Enviar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Read / edit detail -->
+<div id="modal-detail" class="hidden fixed inset-0 z-[100] bg-black/40 flex items-end sm:items-center justify-center p-0 sm:p-4">
+  <div class="bg-white rounded-t-3xl sm:rounded-3xl w-full max-w-md max-h-[92vh] overflow-y-auto shadow-xl">
+    <div class="p-5 pt-4">
+      <div class="flex items-center justify-between mb-3">
+        <span class="material-symbols-outlined text-primary text-[28px]">mail</span>
+        <button id="det-close" type="button" class="w-9 h-9 rounded-full bg-[#f0ede9] flex items-center justify-center">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+      <input id="det-titulo" class="w-full font-display text-2xl italic outline-none bg-transparent mb-3 border-b border-transparent focus:border-primary-container"/>
+      <textarea id="det-mensaje" class="w-full text-sm leading-relaxed text-on-surface outline-none resize-none bg-transparent min-h-[160px] mb-3" rows="8"></textarea>
+      <p id="det-meta" class="text-xs text-on-surface-variant mb-4"></p>
+      <div class="grid grid-cols-2 gap-2">
+        <button id="det-save" type="button" class="py-2.5 rounded-full bg-primary-container text-white text-sm font-semibold flex items-center justify-center gap-1">
+          <span class="material-symbols-outlined text-[18px]">edit</span> Guardar cambios
+        </button>
+        <button id="det-delete" type="button" class="py-2.5 rounded-full bg-red-50 text-red-700 text-sm font-semibold flex items-center justify-center gap-1">
+          <span class="material-symbols-outlined text-[18px]">delete</span> Eliminar
+        </button>
+      </div>
+      <p id="det-status" class="text-xs text-center mt-3 hidden"></p>
+    </div>
+  </div>
+</div>
+
+<nav class="fixed bottom-0 inset-x-0 z-50 pb-safe px-1 pointer-events-none">
+  <div class="pointer-events-auto mx-auto max-w-[520px] mb-2 bg-white/95 backdrop-blur-xl rounded-full shadow-lg px-0.5 py-0.5 flex items-center justify-around">
+    <a class="flex flex-col items-center justify-center flex-1 min-w-0 py-1.5 text-on-surface-variant" href="inicio.html"><span class="material-symbols-outlined text-[18px]">favorite</span><span class="text-[8px] mt-0.5">Espacio</span></a>
+    <a class="flex flex-col items-center justify-center flex-1 min-w-0 py-1.5 text-on-surface-variant" href="recuerdos.html"><span class="material-symbols-outlined text-[18px]">auto_stories</span><span class="text-[8px] mt-0.5">Recuerdos</span></a>
+    <a class="flex flex-col items-center justify-center flex-1 min-w-0 py-1.5 text-on-surface-variant" href="fotos.html"><span class="material-symbols-outlined text-[18px]">photo_camera</span><span class="text-[8px] mt-0.5">Fotos</span></a>
+    <a class="flex flex-col items-center justify-center flex-1 min-w-0 py-1.5 text-on-surface-variant" href="musica.html"><span class="material-symbols-outlined text-[18px]">music_note</span><span class="text-[8px] mt-0.5">Música</span></a>
+    <a class="flex flex-col items-center justify-center flex-1 min-w-0 py-1.5 text-primary scale-105 font-bold" href="cartas.html"><span class="material-symbols-outlined text-[18px]">mail</span><span class="text-[8px] mt-0.5">Cartas</span></a>
+    <a class="relative flex flex-col items-center justify-center flex-1 min-w-0 py-1.5 text-on-surface-variant" href="avisos.html"><span class="material-symbols-outlined text-[18px]">notifications</span><span class="absolute top-0.5 right-0.5 min-w-[12px] h-[12px] rounded-full bg-primary-container text-white text-[7px] font-bold flex items-center justify-center unread-badge hidden">0</span><span class="text-[8px] mt-0.5">Avisos</span></a>
+    <a class="flex flex-col items-center justify-center flex-1 min-w-0 py-1.5 text-on-surface-variant" href="cambiar-usuario.html"><span class="material-symbols-outlined text-[18px]">switch_account</span><span class="text-[8px] mt-0.5">Yo</span></a>
+  </div>
+</nav>
+
+<script src="../js/supabase-client.js"></script>
+<script>
+(function(){
+  if(!localStorage.getItem('keepsake_user')){ location.replace('../index.html'); return; }
+  let items=[], current=null, filter='todos', mode='carta';
+  const me = (localStorage.getItem('keepsake_user')||'');
+  const listEl=document.getElementById('list'), emptyEl=document.getElementById('empty');
+
+  function esc(s){ if(!s) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;'); }
+
+  function isMine(item){
+    return (item.autor||'').toLowerCase() === me.toLowerCase();
+  }
+  function kindOf(item){
+    const c=(item.comentario||'').toLowerCase();
+    const t=(item.titulo||'').toLowerCase();
+    if(c==='chat' || t==='chat' || t==='audio') return 'chat';
+    if(c==='mensajito') return 'mensajito';
+    return 'carta';
+  }
+  function filtered(){
+    let data = items.filter(i => kindOf(i)===mode);
+    if(filter!=='todos') data = data.filter(i => (i.autor||'').toLowerCase() === filter.toLowerCase());
+    return data;
+  }
+
+  function render(){
+    const data = filtered();
+    if(!data.length){
+      listEl.innerHTML='';
+      emptyEl.classList.remove('hidden'); emptyEl.classList.add('flex');
+      emptyEl.querySelector('p.font-display').textContent = mode==='mensajito' ? 'Aún no hay mensajitos' : 'Aún no hay cartas';
+      emptyEl.querySelector('p.text-sm').textContent = mode==='mensajito' ? 'Un buenos días le aparece al instante' : 'Escribe la primera nota de amor';
+      return;
+    }
+    emptyEl.classList.add('hidden'); emptyEl.classList.remove('flex');
+    listEl.innerHTML=data.map(item=>`
+      <div class="letter-card bg-white rounded-2xl p-4 shadow-sm border border-[#f0ede9]" data-id="${item.id}">
+        <div class="flex items-start gap-3">
+          <div class="w-10 h-10 rounded-full bg-[#ffd9dd] flex items-center justify-center shrink-0">
+            <span class="material-symbols-outlined text-primary text-[20px]">mail</span>
+          </div>
+          <div class="flex-1 min-w-0">
+            ${item.titulo && kindOf(item)!=='mensajito' ? `<p class="font-display text-lg italic truncate">${esc(item.titulo)}</p>` : ''}
+            <p class="text-sm text-on-surface-variant ${item.titulo && kindOf(item)!=='mensajito' ? 'line-clamp-2 mt-1' : 'line-clamp-3'}">${esc(item.mensaje)||''}</p>
+            <p class="text-xs text-on-surface-variant mt-2">${esc(item.autor)||''} · ${window.KeepsakeDB.formatFullDate(item.created_at)}</p>
+          </div>
+          <span class="material-symbols-outlined text-on-surface-variant text-[18px]">chevron_right</span>
+        </div>
+      </div>`).join('');
+    listEl.querySelectorAll('.letter-card').forEach(el=>{
+      el.addEventListener('click', ()=> openDetail(el.dataset.id));
+    });
+  }
+
+  function openDetail(id){
+    current = items.find(i=>i.id===id);
+    if(!current) return;
+    document.getElementById('det-titulo').value = current.titulo || '';
+    document.getElementById('det-titulo').classList.toggle('hidden', kindOf(current)==='mensajito' && !current.titulo);
+    document.getElementById('det-mensaje').value = current.mensaje || '';
+    document.getElementById('det-meta').textContent = (current.autor||'') + ' · ' + window.KeepsakeDB.formatFullDate(current.created_at);
+    document.getElementById('det-status').classList.add('hidden');
+    const mine = isMine(current);
+    document.getElementById('det-titulo').readOnly = !mine;
+    document.getElementById('det-mensaje').readOnly = !mine;
+    document.getElementById('det-save').classList.toggle('hidden', !mine);
+    document.getElementById('det-delete').classList.toggle('hidden', !mine);
+    document.getElementById('modal-detail').classList.remove('hidden');
+  }
+
+  document.getElementById('det-close').onclick = () => document.getElementById('modal-detail').classList.add('hidden');
+  document.getElementById('det-save').onclick = async () => {
+    if(!current) return;
+    if(!isMine(current)){ alert('Solo quien escribió esta carta puede editarla'); return; }
+    const titulo = document.getElementById('det-titulo').value.trim();
+    const mensaje = document.getElementById('det-mensaje').value.trim();
+    const st = document.getElementById('det-status');
+    const {error} = await window.KeepsakeDB.updateContenido(current.id, {titulo, mensaje});
+    if(error){ st.textContent = window.KeepsakeDB.errMsg(error); st.classList.remove('hidden'); return; }
+    st.textContent = 'Guardado'; st.classList.remove('hidden');
+    load();
+  };
+  document.getElementById('det-delete').onclick = async () => {
+    if(!current || !isMine(current)){ alert('Solo quien la escribió puede eliminarla'); return; }
+    if(!confirm('¿Eliminar esta carta?')) return;
+    const {error} = await window.KeepsakeDB.deleteContenido(current.id);
+    if(error){ alert(window.KeepsakeDB.errMsg(error)); return; }
+    document.getElementById('modal-detail').classList.add('hidden');
+    load();
+  };
+
+  document.querySelectorAll('.mode-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      mode = btn.dataset.mode;
+      document.querySelectorAll('.mode-btn').forEach(b=>{
+        b.classList.remove('bg-white','shadow','font-semibold');
+        b.classList.add('text-on-surface-variant');
+      });
+      btn.classList.add('bg-white','shadow','font-semibold');
+      btn.classList.remove('text-on-surface-variant');
+      document.getElementById('page-sub').textContent = mode==='mensajito'
+        ? 'Notitas cortas · pensadas para el widget del teléfono'
+        : 'Toca una carta para leerla completa.';
+      document.querySelector('#modal h3').textContent = mode==='mensajito' ? 'Nuevo mensajito' : 'Nueva carta';
+      document.getElementById('wrap-titulo').classList.toggle('hidden', mode==='mensajito');
+      document.getElementById('lbl-mensaje').textContent = mode==='mensajito' ? 'Mensajito' : 'Mensaje';
+      document.getElementById('up-mensaje').placeholder = mode==='mensajito' ? 'Buenos días...' : 'Escribe con el corazón...';
+      document.getElementById('up-mensaje').rows = mode==='mensajito' ? 3 : 6;
+      render();
+    });
+  });
+
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      filter = btn.dataset.filter;
+      document.querySelectorAll('.filter-btn').forEach(b => {
+        b.classList.remove('filter-active', 'bg-primary-container', 'text-white');
+        b.classList.add('bg-white', 'shadow-sm');
+      });
+      btn.classList.add('filter-active', 'bg-primary-container', 'text-white');
+      btn.classList.remove('bg-white', 'shadow-sm');
+      render();
+    });
+  });
+
+  async function load(){
+    items = await window.KeepsakeDB.fetchContenidoAny(['textos','cartas','carta']);
+    render();
+  }
+
+  const modal = document.getElementById('modal');
+  document.getElementById('btn-add').onclick = () => modal.classList.remove('hidden');
+  document.getElementById('modal-cancel').onclick = () => modal.classList.add('hidden');
+  document.getElementById('modal-save').onclick = async () => {
+    const titulo = mode==='mensajito' ? '' : document.getElementById('up-titulo').value.trim();
+    const mensaje = document.getElementById('up-mensaje').value.trim();
+    if(!mensaje){ alert('Escribe algo'); return; }
+    const payload = {seccion:'textos', tipo:'texto', mensaje, comentario: mode};
+    if(titulo) payload.titulo = titulo;
+    const {data, error} = await window.KeepsakeDB.insertContenido(payload);
+    if(error){ alert('Error: ' + window.KeepsakeDB.errMsg(error)); return; }
+    if(data) await window.KeepsakeDB.createNotificacion({
+      mensaje: window.KeepsakeDB.getCurrentUser() + (mode==='mensajito'?' te dejó un mensajito':' te escribió una carta'),
+      contenido_id: data.id, titulo, seccion: 'textos'
+    });
+    modal.classList.add('hidden');
+    document.getElementById('up-titulo').value = '';
+    document.getElementById('up-mensaje').value = '';
+    load();
+  };
+
+  document.addEventListener('supabase-ready', load);
+  setTimeout(load, 400);
+  setTimeout(() => window.KeepsakeDB && window.KeepsakeDB.refreshUnreadBadge(), 600);
+})();
+</script>
+</body>
+</html>

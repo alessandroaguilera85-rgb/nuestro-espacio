@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/>
+<title>Música</title>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..700;1,400..700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config={theme:{extend:{colors:{primary:"#944652","primary-container":"#d67b88","on-primary":"#ffffff",surface:"#fcf9f4","on-surface":"#1c1c19","on-surface-variant":"#534344",secondary:"#4a6453"},fontFamily:{display:["Playfair Display"],body:["Plus Jakarta Sans"]}}}};
+</script>
+<style>
+html,body{margin:0;width:100%;overflow-x:hidden}
+body{overscroll-behavior:none;background:#f7efe6;-webkit-tap-highlight-color:transparent}
+.pb-safe{padding-bottom:env(safe-area-inset-bottom,0)}
+.song-active{background:#f5e6d8}
+.cassette{
+  background:linear-gradient(145deg,#c5d4c0,#a8bba4);
+  border-radius:16px;
+  box-shadow:0 12px 30px rgba(74,100,83,.25), inset 0 1px 0 rgba(255,255,255,.4);
+  position:relative;
+}
+.cassette-window{
+  background:#1a1f1c;
+  border-radius:8px;
+  border:2px solid #8a9a85;
+}
+.spool{
+  width:44px;height:44px;border-radius:50%;
+  background:radial-gradient(circle at 40% 40%,#e8efe6,#2d322e);
+  border:3px dashed #6b7a68;
+  display:flex;align-items:center;justify-content:center;
+}
+.spool.spin{animation:spin 2s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.note-card{
+  background:#faf3e0;
+  border-radius:12px;
+  box-shadow:2px 2px 0 rgba(148,70,82,.08);
+  font-family:'Playfair Display',serif;
+}
+</style>
+</head>
+<body class="font-body text-on-surface min-h-screen flex flex-col">
+<audio id="player" preload="metadata"></audio>
+
+<main class="flex-1 px-4 pt-5 pb-28 max-w-lg mx-auto w-full">
+  <div class="text-center mb-4">
+    <p class="text-[10px] tracking-[0.2em] uppercase text-primary font-semibold">For you · From us</p>
+    <h1 class="font-display text-3xl italic font-semibold mt-1">Songs for you</h1>
+    <p id="role-hint" class="text-xs text-on-surface-variant mt-1"></p>
+  </div>
+
+  <!-- Cassette -->
+  <div class="cassette p-4 mb-5">
+    <div class="flex justify-center mb-2">
+      <span class="px-3 py-0.5 rounded-full bg-white/70 text-[10px] italic text-secondary">Songs for you</span>
+    </div>
+    <div class="cassette-window p-3 flex items-center justify-between gap-2">
+      <div class="spool" id="spool-l"><div class="w-3 h-3 rounded-full bg-[#1a1f1c]"></div></div>
+      <div class="flex-1 text-center min-w-0 px-1">
+        <p class="text-[#f0e6d8] font-display italic text-sm truncate" id="now-title">Sin canción</p>
+        <p class="text-[#f0e6d8]/60 text-[10px] truncate" id="now-artist">—</p>
+      </div>
+      <div class="spool" id="spool-r"><div class="w-3 h-3 rounded-full bg-[#1a1f1c]"></div></div>
+    </div>
+    <div class="flex items-center justify-center gap-4 mt-3">
+      <button id="btn-prev" type="button" class="w-10 h-10 rounded-full bg-white/80 flex items-center justify-center text-secondary">
+        <span class="material-symbols-outlined">skip_previous</span>
+      </button>
+      <button id="btn-play" type="button" class="w-14 h-14 rounded-full bg-[#3d5a45] text-white flex items-center justify-center shadow-lg">
+        <span class="material-symbols-outlined text-[32px]" id="play-icon">play_arrow</span>
+      </button>
+      <button id="btn-next" type="button" class="w-10 h-10 rounded-full bg-white/80 flex items-center justify-center text-secondary">
+        <span class="material-symbols-outlined">skip_next</span>
+      </button>
+    </div>
+    <div class="mt-2 px-1">
+      <input id="seek" type="range" min="0" max="100" value="0" class="w-full h-1 accent-[#3d5a45]"/>
+      <div class="flex justify-between text-[10px] text-secondary/80 mt-0.5">
+        <span id="t-cur">0:00</span>
+        <span id="t-dur">0:00</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Compact lyrics strip (Spotify-like) -->
+  <button type="button" id="lyrics-strip" class="hidden w-full text-left note-card px-4 py-3 mb-4 flex items-center gap-3 active:scale-[0.99]">
+    <span class="material-symbols-outlined text-primary">lyrics</span>
+    <div class="flex-1 min-w-0">
+      <p class="text-[10px] tracking-widest uppercase text-primary/70">Letra</p>
+      <p class="text-sm italic truncate" id="lyrics-preview">—</p>
+    </div>
+    <span class="material-symbols-outlined text-on-surface-variant">open_in_full</span>
+  </button>
+
+  <!-- Fullscreen lyrics -->
+  <div id="lyrics-full" class="hidden fixed inset-0 z-[90] bg-[#1a1614]/95 text-[#faf3e0] flex flex-col">
+    <div class="flex items-center justify-between px-4 pt-4 pb-2">
+      <div class="min-w-0">
+        <p class="font-display italic truncate" id="lf-title">Canción</p>
+        <p class="text-xs opacity-70 truncate" id="lf-artist"></p>
+      </div>
+      <button type="button" id="lf-close" class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+    <div id="lf-lines" class="flex-1 overflow-y-auto px-6 py-8 space-y-4 text-center"></div>
+    <p class="text-[10px] text-center opacity-50 pb-6">Toca para cerrar · la línea activa se resalta al reproducir</p>
+  </div>
+
+  <div class="flex items-center justify-between mb-3">
+    <h2 class="font-display text-xl italic">Mixtape</h2>
+    <button id="btn-add" type="button" class="hidden inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-primary-container text-on-primary text-sm font-semibold">
+      <span class="material-symbols-outlined text-[16px]">add</span> Agregar
+    </button>
+  </div>
+  <div id="list" class="space-y-2"></div>
+  <div id="empty" class="flex flex-col items-center text-center py-10">
+    <span class="material-symbols-outlined text-5xl text-primary-container/40 mb-3">music_note</span>
+    <p class="font-display text-xl italic text-on-surface-variant">El mixtape está vacío</p>
+    <p class="text-sm text-on-surface-variant mt-1" id="empty-hint">Alessandro puede subir MP3 y letra</p>
+  </div>
+</main>
+
+<!-- Add song modal -->
+<div id="modal" class="hidden fixed inset-0 z-[100] bg-black/40 flex items-end sm:items-center justify-center p-4">
+  <div class="bg-white rounded-3xl w-full max-w-md p-5 shadow-xl max-h-[90vh] overflow-y-auto">
+    <h3 class="font-display text-2xl italic mb-4">Agregar canción</h3>
+    <label class="block text-sm mb-1">Título *</label>
+    <input id="up-titulo" class="w-full px-3 py-2 rounded-xl bg-[#f6f3ee] mb-3 outline-none text-sm" placeholder="Perfect"/>
+    <label class="block text-sm mb-1">Artista</label>
+    <input id="up-artista" class="w-full px-3 py-2 rounded-xl bg-[#f6f3ee] mb-3 outline-none text-sm" placeholder="Ed Sheeran"/>
+    <label class="block text-sm mb-1">Archivo MP3 / audio *</label>
+    <input id="up-file" type="file" accept="audio/*,.mp3,.m4a,.wav,.ogg" class="w-full text-sm mb-1"/>
+    <p class="text-[10px] text-on-surface-variant mb-3">Se reproduce dentro de la app, sin abrir otra.</p>
+    <label class="block text-sm mb-1">Letra / nota (opcional)</label>
+    <textarea id="up-letra" class="w-full px-3 py-2 rounded-xl bg-[#f6f3ee] mb-4 outline-none resize-none text-sm" rows="4" placeholder="Pega la letra. Opcional con tiempos LRC:&#10;[00:12.00] I'm feeling so good&#10;[00:16.50] Tonight..."></textarea>
+    <p id="up-status" class="text-xs text-red-600 mb-2 hidden"></p>
+    <div class="flex gap-2">
+      <button id="modal-cancel" type="button" class="flex-1 py-2.5 rounded-full bg-[#f0ede9] text-sm">Cancelar</button>
+      <button id="modal-save" type="button" class="flex-1 py-2.5 rounded-full bg-primary-container text-white text-sm font-semibold">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<nav class="fixed bottom-0 inset-x-0 z-50 pb-safe px-1 pointer-events-none">
+  <div class="pointer-events-auto mx-auto max-w-[520px] mb-2 bg-white/95 backdrop-blur-xl rounded-full shadow-lg px-0.5 py-0.5 flex items-center justify-around">
+    <a class="flex flex-col items-center justify-center flex-1 min-w-0 py-1.5 text-on-surface-variant" href="inicio.html"><span class="material-symbols-outlined text-[18px]">favorite</span><span class="text-[8px] mt-0.5">Espacio</span></a>
+    <a class="flex flex-col items-center justify-center flex-1 min-w-0 py-1.5 text-on-surface-variant" href="recuerdos.html"><span class="material-symbols-outlined text-[18px]">auto_stories</span><span class="text-[8px] mt-0.5">Recuerdos</span></a>
+    <a class="flex flex-col items-center justify-center flex-1 min-w-0 py-1.5 text-on-surface-variant" href="fotos.html"><span class="material-symbols-outlined text-[18px]">photo_camera</span><span class="text-[8px] mt-0.5">Fotos</span></a>
+    <a class="flex flex-col items-center justify-center flex-1 min-w-0 py-1.5 text-primary scale-105 font-bold" href="musica.html"><span class="material-symbols-outlined text-[18px]">music_note</span><span class="text-[8px] mt-0.5">Música</span></a>
+    <a class="flex flex-col items-center justify-center flex-1 min-w-0 py-1.5 text-on-surface-variant" href="cartas.html"><span class="material-symbols-outlined text-[18px]">mail</span><span class="text-[8px] mt-0.5">Cartas</span></a>
+    <a class="relative flex flex-col items-center justify-center flex-1 min-w-0 py-1.5 text-on-surface-variant" href="avisos.html"><span class="material-symbols-outlined text-[18px]">notifications</span><span class="absolute top-0.5 right-0.5 min-w-[12px] h-[12px] rounded-full bg-primary-container text-white text-[7px] font-bold flex items-center justify-center unread-badge hidden">0</span><span class="text-[8px] mt-0.5">Avisos</span></a>
+    <a class="flex flex-col items-center justify-center flex-1 min-w-0 py-1.5 text-on-surface-variant" href="cambiar-usuario.html"><span class="material-symbols-outlined text-[18px]">switch_account</span><span class="text-[8px] mt-0.5">Yo</span></a>
+  </div>
+</nav>
+
+<script src="../js/supabase-client.js"></script>
+<script>
+(function(){
+  if(!localStorage.getItem('keepsake_user')){ location.replace('../index.html'); return; }
+  let items=[], idx=0, playing=false;
+  const isAle = () => (localStorage.getItem('keepsake_user')||'').toLowerCase()==='alessandro';
+  const player = document.getElementById('player');
+  const listEl=document.getElementById('list'), emptyEl=document.getElementById('empty');
+
+  document.getElementById('role-hint').textContent = isAle()
+    ? 'Puedes subir MP3 y letra al mixtape'
+    : 'Escucha el mixtape · solo Alessandro sube canciones';
+  if(isAle()) document.getElementById('btn-add').classList.remove('hidden');
+
+  function fmt(t){
+    if(!isFinite(t)) return '0:00';
+    const m=Math.floor(t/60), s=Math.floor(t%60);
+    return m+':'+String(s).padStart(2,'0');
+  }
+
+  let lyricData = { timed:false, lines:[] };
+
+  function parseLyrics(raw){
+    if(!raw) return { timed:false, lines:[] };
+    const out=[];
+    let timed=false;
+    raw.split(/\r?\n/).forEach(line=>{
+      const m=line.match(/^\[(\d+):(\d+(?:\.\d+)?)\]\s*(.*)$/);
+      if(m){
+        timed=true;
+        out.push({ t: (+m[1])*60 + parseFloat(m[2]), text: m[3]||'' });
+      } else if(line.trim()){
+        out.push({ t:null, text: line.trim() });
+      }
+    });
+    return { timed, lines: out };
+  }
+
+  function artistOf(s){
+    return s.letra || s.autor || '';
+  }
+
+  function setNow(){
+    const strip=document.getElementById('lyrics-strip');
+    if(!items.length){
+      document.getElementById('now-title').textContent='Sin canción';
+      document.getElementById('now-artist').textContent='—';
+      strip.classList.add('hidden');
+      lyricData={timed:false,lines:[]};
+      return;
+    }
+    const s=items[idx];
+    document.getElementById('now-title').textContent=s.titulo||'Canción';
+    document.getElementById('now-artist').textContent=artistOf(s);
+    lyricData=parseLyrics(s.mensaje||'');
+    if(lyricData.lines.length){
+      strip.classList.remove('hidden');
+      document.getElementById('lyrics-preview').textContent = lyricData.lines[0].text || 'Ver letra';
+    } else {
+      strip.classList.add('hidden');
+    }
+    document.querySelectorAll('.song-row').forEach((el,i)=>{
+      el.classList.toggle('song-active', i===idx);
+    });
+    renderFullLyrics();
+  }
+
+  function renderFullLyrics(){
+    const wrap=document.getElementById('lf-lines');
+    if(!wrap) return;
+    if(!items.length){ wrap.innerHTML=''; return; }
+    const s=items[idx];
+    document.getElementById('lf-title').textContent=s.titulo||'Canción';
+    document.getElementById('lf-artist').textContent=artistOf(s);
+    wrap.innerHTML = lyricData.lines.map((l,i)=>
+      `<p class="lf-line text-lg leading-snug opacity-40 transition-all" data-i="${i}">${l.text||' '}</p>`
+    ).join('') || '<p class="opacity-50 italic">Sin letra</p>';
+  }
+
+  function highlightLyrics(sec){
+    if(!lyricData.lines.length) return;
+    let i=0;
+    if(lyricData.timed){
+      for(let k=0;k<lyricData.lines.length;k++){
+        const t=lyricData.lines[k].t;
+        if(t!=null && t<=sec) i=k;
+      }
+    } else if(player.duration && isFinite(player.duration)){
+      const n=lyricData.lines.length;
+      i=Math.min(n-1, Math.floor((sec/player.duration)*n));
+    }
+    const lines=document.querySelectorAll('.lf-line');
+    lines.forEach((el,k)=>{
+      const on=k===i;
+      el.classList.toggle('opacity-40', !on);
+      el.classList.toggle('opacity-100', on);
+      el.classList.toggle('text-xl', on);
+      el.classList.toggle('font-semibold', on);
+    });
+    const active=lines[i];
+    if(active && !document.getElementById('lyrics-full').classList.contains('hidden')){
+      active.scrollIntoView({behavior:'smooth', block:'center'});
+    }
+    const preview=document.getElementById('lyrics-preview');
+    if(preview && lyricData.lines[i]) preview.textContent=lyricData.lines[i].text;
+  }
+
+  function loadTrack(autoplay){
+    if(!items.length){ player.removeAttribute('src'); return; }
+    const s=items[idx];
+    setNow();
+    if(s.url_archivo){
+      player.src = s.url_archivo;
+      if(autoplay){
+        player.play().then(()=>{ playing=true; updatePlayUI(); }).catch(()=>{ playing=false; updatePlayUI(); });
+      }
+    } else {
+      player.removeAttribute('src');
+      playing=false; updatePlayUI();
+    }
+  }
+
+  function updatePlayUI(){
+    document.getElementById('play-icon').textContent = playing ? 'pause' : 'play_arrow';
+    document.getElementById('spool-l').classList.toggle('spin', playing);
+    document.getElementById('spool-r').classList.toggle('spin', playing);
+  }
+
+  function render(){
+    if(!items.length){
+      listEl.innerHTML='';
+      emptyEl.classList.remove('hidden'); emptyEl.classList.add('flex');
+      setNow(); return;
+    }
+    emptyEl.classList.add('hidden'); emptyEl.classList.remove('flex');
+    listEl.innerHTML=items.map((item,i)=>`
+      <div class="song-row flex items-center gap-3 bg-white rounded-2xl p-3 shadow-sm ${i===idx?'song-active':''}" data-i="${i}">
+        <div class="w-9 h-9 rounded-full bg-[#e8f0e6] flex items-center justify-center text-secondary text-sm font-semibold">${String(i+1).padStart(2,'0')}</div>
+        <div class="flex-1 min-w-0">
+          <p class="font-medium truncate">${item.titulo||'Sin título'}</p>
+          <p class="text-xs text-on-surface-variant truncate">${item.letra||item.autor||''}</p>
+        </div>
+        <button type="button" class="w-9 h-9 rounded-full flex items-center justify-center ${i===idx&&playing?'bg-[#3d5a45] text-white':'bg-[#f0ede9] text-secondary'}" data-play="${i}">
+          <span class="material-symbols-outlined text-[20px]">${i===idx&&playing?'pause':'play_arrow'}</span>
+        </button>
+        ${isAle()?`<button type="button" data-del="${item.id}" class="text-red-400 p-1"><span class="material-symbols-outlined text-[18px]">delete</span></button>`:''}
+      </div>`).join('');
+    listEl.querySelectorAll('.song-row').forEach(el=>{
+      el.addEventListener('click', (e)=>{
+        if(e.target.closest('[data-del]')||e.target.closest('[data-play]')) return;
+        idx=+el.dataset.i; loadTrack(true);
+      });
+    });
+    listEl.querySelectorAll('[data-play]').forEach(btn=>{
+      btn.addEventListener('click', (e)=>{
+        e.stopPropagation();
+        const i=+btn.dataset.play;
+        if(i===idx && playing){ player.pause(); playing=false; updatePlayUI(); render(); }
+        else { idx=i; loadTrack(true); }
+      });
+    });
+    listEl.querySelectorAll('[data-del]').forEach(btn=>{
+      btn.addEventListener('click', async (e)=>{
+        e.stopPropagation();
+        if(!confirm('¿Quitar esta canción?')) return;
+        await window.KeepsakeDB.deleteContenido(btn.dataset.del);
+        if(playing){ player.pause(); playing=false; }
+        load();
+      });
+    });
+    setNow();
+  }
+
+  async function load(){
+    items=await window.KeepsakeDB.fetchContenidoAny(['musica','mixtape']);
+    if(idx>=items.length) idx=0;
+    render();
+    if(items.length && items[idx].url_archivo){
+      player.src=items[idx].url_archivo;
+    }
+  }
+
+  document.getElementById('lyrics-strip').onclick=()=>{
+    document.getElementById('lyrics-full').classList.remove('hidden');
+    renderFullLyrics();
+    highlightLyrics(player.currentTime||0);
+  };
+  document.getElementById('lf-close').onclick=()=>document.getElementById('lyrics-full').classList.add('hidden');
+  document.getElementById('lf-lines').onclick=()=>document.getElementById('lyrics-full').classList.add('hidden');
+
+  document.getElementById('btn-prev').onclick=()=>{
+    if(!items.length) return;
+    idx=(idx-1+items.length)%items.length;
+    loadTrack(true);
+  };
+  document.getElementById('btn-next').onclick=()=>{
+    if(!items.length) return;
+    idx=(idx+1)%items.length;
+    loadTrack(true);
+  };
+  document.getElementById('btn-play').onclick=()=>{
+    if(!items.length) return;
+    if(!items[idx].url_archivo){
+      alert('Esta canción no tiene archivo de audio');
+      return;
+    }
+    if(playing){ player.pause(); playing=false; }
+    else {
+      if(!player.src) player.src=items[idx].url_archivo;
+      player.play().then(()=>{ playing=true; updatePlayUI(); render(); }).catch(e=>alert('No se pudo reproducir: '+e.message));
+      return;
+    }
+    updatePlayUI(); render();
+  };
+
+  player.addEventListener('timeupdate', ()=>{
+    const seek=document.getElementById('seek');
+    if(player.duration){
+      seek.value = (player.currentTime/player.duration)*100;
+      document.getElementById('t-cur').textContent=fmt(player.currentTime);
+      document.getElementById('t-dur').textContent=fmt(player.duration);
+    }
+    highlightLyrics(player.currentTime||0);
+  });
+  player.addEventListener('ended', ()=>{
+    if(idx < items.length-1){ idx++; loadTrack(true); }
+    else { playing=false; updatePlayUI(); render(); }
+  });
+  player.addEventListener('play', ()=>{ playing=true; updatePlayUI(); render(); });
+  player.addEventListener('pause', ()=>{ playing=false; updatePlayUI(); render(); });
+  document.getElementById('seek').addEventListener('input', function(){
+    if(player.duration) player.currentTime = (this.value/100)*player.duration;
+  });
+
+  // Upload
+  const modal=document.getElementById('modal');
+  let audioFile=null;
+  document.getElementById('btn-add').onclick=()=>{
+    if(!isAle()){ alert('Solo Alessandro puede agregar canciones'); return; }
+    modal.classList.remove('hidden');
+    audioFile=null;
+    document.getElementById('up-file').value='';
+    document.getElementById('up-status').classList.add('hidden');
+  };
+  document.getElementById('modal-cancel').onclick=()=>modal.classList.add('hidden');
+  document.getElementById('up-file').onchange=function(){ audioFile=this.files&&this.files[0]; };
+
+  document.getElementById('modal-save').onclick=async()=>{
+    if(!isAle()) return;
+    const titulo=document.getElementById('up-titulo').value.trim();
+    const artista=document.getElementById('up-artista').value.trim();
+    const letra=document.getElementById('up-letra').value.trim();
+    const st=document.getElementById('up-status');
+    if(!titulo){ st.textContent='Pon el título'; st.classList.remove('hidden'); return; }
+    if(!audioFile){ st.textContent='Elige un archivo de audio (MP3)'; st.classList.remove('hidden'); return; }
+    const btn=document.getElementById('modal-save');
+    btn.disabled=true; btn.textContent='Subiendo…'; st.classList.add('hidden');
+    const {url, error:upErr}=await window.KeepsakeDB.uploadFile(audioFile,'musica');
+    if(upErr||!url){
+      st.textContent='Storage: '+window.KeepsakeDB.errMsg(upErr);
+      st.classList.remove('hidden');
+      btn.disabled=false; btn.textContent='Guardar';
+      return;
+    }
+    // letra field = artist (short); mensaje = full lyrics
+    const {data,error}=await window.KeepsakeDB.insertContenido({
+      seccion:'musica', tipo:'audio', titulo,
+      letra:artista||undefined,
+      mensaje:letra||undefined,
+      url_archivo:url
+    });
+    if(error){
+      st.textContent='BD: '+window.KeepsakeDB.errMsg(error);
+      st.classList.remove('hidden');
+      btn.disabled=false; btn.textContent='Guardar';
+      return;
+    }
+    if(data) await window.KeepsakeDB.createNotificacion({
+      mensaje:window.KeepsakeDB.getCurrentUser()+' agregó una canción: '+titulo,
+      contenido_id:data.id, titulo, seccion:'musica'
+    });
+    modal.classList.add('hidden');
+    document.getElementById('up-titulo').value='';
+    document.getElementById('up-artista').value='';
+    document.getElementById('up-letra').value='';
+    btn.disabled=false; btn.textContent='Guardar';
+    load();
+  };
+
+  document.addEventListener('supabase-ready',load);
+  setTimeout(load,400);
+  setTimeout(()=>window.KeepsakeDB&&window.KeepsakeDB.refreshUnreadBadge(),600);
+})();
+</script>
+</body>
+</html>

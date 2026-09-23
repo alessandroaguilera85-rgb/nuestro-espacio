@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/>
+<title>Avisos</title>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..700;1,400..700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config={theme:{extend:{colors:{primary:"#944652","primary-container":"#d67b88","on-primary":"#ffffff",surface:"#fcf9f4","on-surface":"#1c1c19","on-surface-variant":"#534344"},spacing:{margin:"1.25rem"},fontFamily:{display:["Playfair Display"],body:["Plus Jakarta Sans"]}}}};
+</script>
+<style>
+html,body{margin:0;width:100%}body{overscroll-behavior:none;background:#fcf9f4}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0)}
+.nuevo{background:#fff5f5}
+</style>
+</head>
+<body class="font-body text-on-surface min-h-screen flex flex-col">
+<main class="flex-1 px-margin pt-4 pb-28 max-w-lg mx-auto w-full">
+  <div class="flex items-center justify-end mb-3">
+    <button id="btn-mark-all" type="button" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-primary-container text-on-primary text-sm font-semibold shadow active:scale-95">
+      <span class="material-symbols-outlined text-[18px]">done_all</span> Marcar todo
+    </button>
+  </div>
+  <div class="flex flex-col items-center text-center mb-6">
+    <div class="w-12 h-12 rounded-full bg-[#ffd9dd] flex items-center justify-center mb-2">
+      <span class="material-symbols-outlined text-primary text-[24px]">notifications</span>
+    </div>
+    <h1 class="font-display text-3xl italic font-semibold">Avisos</h1>
+    <p class="text-sm text-on-surface-variant italic mt-1 max-w-xs">Aquí te enteras de lo nuevo que subió el otro, sin perderte nada.</p>
+    <span id="unread-pill" class="mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#f0ede9] text-sm text-on-surface-variant hidden">
+      <span class="material-symbols-outlined text-[16px]">mark_email_unread</span>
+      <span id="unread-text">0 novedades sin ver</span>
+    </span>
+  </div>
+  <div id="list" class="space-y-3"></div>
+  <div id="empty" class="hidden flex flex-col items-center text-center py-16">
+    <span class="material-symbols-outlined text-5xl text-primary-container/40 mb-3">notifications_off</span>
+    <p class="font-display text-xl italic text-on-surface-variant">Todo al día</p>
+    <p class="text-sm text-on-surface-variant mt-1">Cuando alguien suba algo, aparecerá aquí</p>
+  </div>
+</main>
+
+<nav class="fixed bottom-0 inset-x-0 z-50 pb-safe px-1 pointer-events-none">
+  <div class="pointer-events-auto mx-auto max-w-[520px] mb-2 bg-white/95 backdrop-blur-xl rounded-full shadow-lg px-0.5 py-0.5 flex items-center justify-around">
+    <a class="flex flex-col items-center justify-center flex-1 min-w-0 py-1.5 text-on-surface-variant" href="inicio.html"><span class="material-symbols-outlined text-[18px]">favorite</span><span class="text-[8px] mt-0.5 truncate">Espacio</span></a><a class="flex flex-col items-center justify-center flex-1 min-w-0 py-1.5 text-on-surface-variant" href="recuerdos.html"><span class="material-symbols-outlined text-[18px]">auto_stories</span><span class="text-[8px] mt-0.5 truncate">Recuerdos</span></a><a class="flex flex-col items-center justify-center flex-1 min-w-0 py-1.5 text-on-surface-variant" href="fotos.html"><span class="material-symbols-outlined text-[18px]">photo_camera</span><span class="text-[8px] mt-0.5 truncate">Fotos</span></a><a class="flex flex-col items-center justify-center flex-1 min-w-0 py-1.5 text-on-surface-variant" href="musica.html"><span class="material-symbols-outlined text-[18px]">music_note</span><span class="text-[8px] mt-0.5 truncate">Música</span></a><a class="flex flex-col items-center justify-center flex-1 min-w-0 py-1.5 text-on-surface-variant" href="cartas.html"><span class="material-symbols-outlined text-[18px]">mail</span><span class="text-[8px] mt-0.5 truncate">Cartas</span></a><a class="relative flex flex-col items-center justify-center flex-1 min-w-0 py-1.5 text-primary scale-105 font-bold" href="avisos.html"><span class="material-symbols-outlined text-[18px]">notifications</span><span class="absolute top-0.5 right-0.5 min-w-[12px] h-[12px] rounded-full bg-primary-container text-white text-[7px] font-bold flex items-center justify-center unread-badge hidden">0</span><span class="text-[8px] mt-0.5 truncate">Avisos</span></a><a class="flex flex-col items-center justify-center flex-1 min-w-0 py-1.5 text-on-surface-variant" href="cambiar-usuario.html"><span class="material-symbols-outlined text-[18px]">switch_account</span><span class="text-[8px] mt-0.5 truncate">Yo</span></a>
+  </div>
+</nav>
+
+<script src="../js/supabase-client.js"></script>
+<script>
+(function(){
+  if(!localStorage.getItem('keepsake_user')){ location.replace('../index.html'); return; }
+  const listEl=document.getElementById('list'), emptyEl=document.getElementById('empty');
+  async function load(){
+    const items=await window.KeepsakeDB.fetchNotificaciones(false);
+    const unread=items.filter(i=>!i.leido).length;
+    const pill=document.getElementById('unread-pill');
+    if(unread>0){
+      pill.classList.remove('hidden');
+      document.getElementById('unread-text').textContent=unread+(unread===1?' novedad sin ver':' novedades sin ver');
+    } else pill.classList.add('hidden');
+    if(!items.length){
+      listEl.innerHTML='';
+      emptyEl.classList.remove('hidden');
+      emptyEl.classList.add('flex');
+      return;
+    }
+    emptyEl.classList.add('hidden');
+    emptyEl.classList.remove('flex');
+    listEl.innerHTML=items.map(item=>`
+      <button type="button" data-id="${item.id}" class="aviso-item w-full text-left flex gap-3 rounded-2xl p-3 shadow-sm ${item.leido?'bg-white':'nuevo'} transition active:scale-[0.99]">
+        <div class="w-14 h-14 rounded-xl overflow-hidden bg-[#f0ede9] shrink-0 flex items-center justify-center">
+          ${item.url_archivo?`<img src="${item.url_archivo}" class="w-full h-full object-cover"/>`:'<span class="material-symbols-outlined text-primary">notifications</span>'}
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-start justify-between gap-2">
+            <p class="font-medium text-sm">${item.titulo||'Novedad'}</p>
+            ${!item.leido?'<span class="shrink-0 text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full bg-primary-container text-white">Nuevo</span>':''}
+          </div>
+          <p class="text-sm text-on-surface-variant mt-0.5 line-clamp-2">${item.mensaje||''}</p>
+          <p class="text-xs text-on-surface-variant mt-1">${window.KeepsakeDB.formatFullDate(item.created_at)}</p>
+        </div>
+      </button>`).join('');
+    listEl.querySelectorAll('.aviso-item').forEach(btn=>{
+      btn.addEventListener('click', async ()=>{
+        const id=btn.dataset.id;
+        await window.KeepsakeDB.markAsRead(id);
+        load();
+        window.KeepsakeDB.refreshUnreadBadge();
+      });
+    });
+  }
+  document.getElementById('btn-mark-all').onclick=async()=>{
+    await window.KeepsakeDB.markAllAsRead();
+    load();
+    window.KeepsakeDB.refreshUnreadBadge();
+  };
+  document.addEventListener('supabase-ready',load);
+  setTimeout(load,400);
+  setTimeout(()=>window.KeepsakeDB&&window.KeepsakeDB.refreshUnreadBadge(),600);
+})();
+</script>
+</body>
+</html>

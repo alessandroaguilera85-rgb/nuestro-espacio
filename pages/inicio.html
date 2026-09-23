@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/>
+<title>Nuestro Espacio</title>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..700;1,400..700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config={theme:{extend:{colors:{primary:"#944652","primary-container":"#d67b88","primary-fixed":"#ffd9dd","on-primary":"#ffffff",surface:"#fcf9f4","on-surface":"#1c1c19","on-surface-variant":"#534344","secondary-fixed":"#ccead3"},fontFamily:{display:["Playfair Display"],body:["Plus Jakarta Sans"]}}}};
+</script>
+<style>
+html,body{margin:0;width:100%;max-width:100vw;overflow-x:hidden}
+body{overscroll-behavior:none;-webkit-tap-highlight-color:transparent;background:#fcf9f4}
+.pb-safe{padding-bottom:env(safe-area-inset-bottom,0)}
+.polaroid{background:#fff;border-radius:10px;box-shadow:0 12px 28px -8px rgba(148,70,82,.2),0 2px 8px rgba(0,0,0,.06)}
+.polaroid img{width:100%;height:100%;object-fit:cover;display:block}
+.pol-img-wrap{position:relative;cursor:pointer}
+.pol-img-wrap .edit-hint{opacity:0;transition:opacity .2s;position:absolute;inset:0;background:rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;border-radius:6px}
+.pol-img-wrap:active .edit-hint,.pol-img-wrap:hover .edit-hint{opacity:1}
+.cap-edit{cursor:pointer;border-radius:4px;padding:1px 4px}
+.cap-edit:hover,.cap-edit:focus{background:#ffd9dd55;outline:none}
+</style>
+</head>
+<body class="font-body text-on-surface min-h-screen flex flex-col relative">
+<div class="pointer-events-none fixed inset-0 z-0 overflow-hidden">
+  <div class="absolute -top-12 -right-8 w-64 h-64 bg-primary-fixed/30 rounded-full blur-3xl"></div>
+  <div class="absolute top-1/3 -left-16 w-56 h-56 bg-secondary-fixed/30 rounded-full blur-3xl"></div>
+</div>
+
+<main class="flex-1 relative z-10 w-full max-w-lg mx-auto px-4 pt-3 pb-28 flex flex-col justify-center">
+  <!-- Polaroids TOP -->
+  <div class="relative w-full h-52 mb-2">
+    <a href="chat.html" id="btn-chat" class="absolute top-0 right-[2%] -translate-y-1/3 z-30 w-11 h-11 rounded-full bg-primary-container text-white shadow-lg flex items-center justify-center active:scale-95" aria-label="Mensajes">
+      <span class="material-symbols-outlined text-[24px]">chat_bubble</span>
+      <span id="chat-dot" class="hidden absolute top-0 right-0 w-3 h-3 rounded-full bg-[#e11d48] ring-2 ring-white"></span>
+    </a>
+    <div class="polaroid absolute top-0 left-0 -rotate-6 w-[42%] max-w-[160px] p-2 pb-5 z-10">
+      <div class="pol-img-wrap aspect-[4/3] rounded-md overflow-hidden bg-[#f0ede9]" data-pol="0">
+        <img id="pol-img-0" alt="" src="https://images.unsplash.com/photo-1490750967868-88aa4486c946?w=400&h=300&fit=crop"/>
+        <div class="edit-hint"><span class="material-symbols-outlined text-white text-[22px]">photo_camera</span></div>
+      </div>
+      <p id="pol-cap-0" class="cap-edit font-display text-[10px] sm:text-xs text-on-surface-variant italic mt-1.5 text-center truncate" contenteditable="true" data-key="0">Flores para ti ♡</p>
+    </div>
+    <div class="polaroid absolute top-2 right-0 rotate-6 w-[42%] max-w-[160px] p-2 pb-5 z-10">
+      <div class="pol-img-wrap aspect-[4/3] rounded-md overflow-hidden bg-[#f0ede9]" data-pol="1">
+        <img id="pol-img-1" alt="" src="https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?w=400&h=300&fit=crop"/>
+        <div class="edit-hint"><span class="material-symbols-outlined text-white text-[22px]">photo_camera</span></div>
+      </div>
+      <p id="pol-cap-1" class="cap-edit font-display text-[10px] sm:text-xs text-on-surface-variant italic mt-1.5 text-center truncate" contenteditable="true" data-key="1">Nosotros :)</p>
+    </div>
+  </div>
+
+  <div class="flex flex-col items-center text-center px-2">
+    <span class="text-[11px] tracking-[0.22em] uppercase text-primary font-semibold mb-1" id="user-greeting">HOLA</span>
+    <h1 class="font-display text-[32px] leading-tight italic font-semibold">Nuestro Espacio</h1>
+    <p class="font-display text-[15px] leading-relaxed text-on-surface-variant italic max-w-sm mt-3">
+      Aquí se guarda todo lo que somos: las canciones que nos recuerdan, las cartas que nos escribimos y cada momento que no queremos olvidar.
+    </p>
+    <div class="flex items-center justify-center gap-2 w-full my-5 max-w-[180px]">
+      <div class="h-px flex-1 bg-gradient-to-r from-transparent to-primary-container/50"></div>
+      <span class="material-symbols-outlined text-primary-container text-[14px]" style="font-variation-settings:'FILL' 1">favorite</span>
+      <div class="h-px flex-1 bg-gradient-to-l from-transparent to-primary-container/50"></div>
+    </div>
+  </div>
+
+  <!-- Polaroids BOTTOM -->
+  <div class="relative w-full min-h-[160px] mt-2 flex items-center justify-center">
+    <div class="polaroid absolute bottom-0 left-0 rotate-3 w-[42%] max-w-[160px] p-2 pb-5 z-10">
+      <div class="pol-img-wrap aspect-[4/3] rounded-md overflow-hidden bg-[#f0ede9]" data-pol="2">
+        <img id="pol-img-2" alt="" src="https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=400&h=300&fit=crop"/>
+        <div class="edit-hint"><span class="material-symbols-outlined text-white text-[22px]">photo_camera</span></div>
+      </div>
+      <p id="pol-cap-2" class="cap-edit font-display text-[10px] sm:text-xs text-on-surface-variant italic mt-1.5 text-center truncate" contenteditable="true" data-key="2">Momentos ♡</p>
+    </div>
+    <div class="polaroid absolute bottom-1 right-0 -rotate-6 w-[42%] max-w-[160px] p-2 pb-5 z-10">
+      <div class="pol-img-wrap aspect-[4/3] rounded-md overflow-hidden bg-[#f0ede9]" data-pol="3">
+        <img id="pol-img-3" alt="" src="https://images.unsplash.com/photo-1518199266791-5375a83190b7?w=400&h=300&fit=crop"/>
+        <div class="edit-hint"><span class="material-symbols-outlined text-white text-[22px]">photo_camera</span></div>
+      </div>
+      <p id="pol-cap-3" class="cap-edit font-display text-[10px] sm:text-xs text-on-surface-variant italic mt-1.5 text-center truncate" contenteditable="true" data-key="3">Tu sonrisa ✨</p>
+    </div>
+  </div>
+
+  <p class="text-center text-[10px] text-on-surface-variant/60 mt-8 px-4">Toca una foto del marco para cambiarla · toca el texto para editarlo</p>
+</main>
+
+<input type="file" id="pol-file" accept="image/*" class="hidden"/>
+
+<nav class="fixed bottom-0 inset-x-0 z-50 pb-safe px-1 pointer-events-none">
+  <div class="pointer-events-auto mx-auto max-w-[520px] mb-2 bg-white/95 backdrop-blur-xl rounded-full shadow-[0_10px_25px_-5px_rgba(176,120,115,0.25)] px-0.5 py-0.5 flex items-center justify-around">
+    <a class="flex flex-col items-center justify-center flex-1 min-w-0 py-1.5 text-primary scale-105 font-bold" href="inicio.html">
+      <span class="material-symbols-outlined text-[18px]">favorite</span>
+      <span class="text-[8px] mt-0.5 truncate">Espacio</span>
+    </a>
+    <a class="flex flex-col items-center justify-center flex-1 min-w-0 py-1.5 text-on-surface-variant" href="recuerdos.html">
+      <span class="material-symbols-outlined text-[18px]">auto_stories</span>
+      <span class="text-[8px] mt-0.5 truncate">Recuerdos</span>
+    </a>
+    <a class="flex flex-col items-center justify-center flex-1 min-w-0 py-1.5 text-on-surface-variant" href="fotos.html">
+      <span class="material-symbols-outlined text-[18px]">photo_camera</span>
+      <span class="text-[8px] mt-0.5 truncate">Fotos</span>
+    </a>
+    <a class="flex flex-col items-center justify-center flex-1 min-w-0 py-1.5 text-on-surface-variant" href="musica.html">
+      <span class="material-symbols-outlined text-[18px]">music_note</span>
+      <span class="text-[8px] mt-0.5 truncate">Música</span>
+    </a>
+    <a class="flex flex-col items-center justify-center flex-1 min-w-0 py-1.5 text-on-surface-variant" href="cartas.html">
+      <span class="material-symbols-outlined text-[18px]">mail</span>
+      <span class="text-[8px] mt-0.5 truncate">Cartas</span>
+    </a>
+    <a class="relative flex flex-col items-center justify-center flex-1 min-w-0 py-1.5 text-on-surface-variant" href="avisos.html">
+      <span class="material-symbols-outlined text-[18px]">notifications</span>
+      <span class="absolute top-0.5 right-0.5 min-w-[12px] h-[12px] rounded-full bg-primary-container text-white text-[7px] font-bold flex items-center justify-center unread-badge hidden">0</span>
+      <span class="text-[8px] mt-0.5 truncate">Avisos</span>
+    </a>
+    <a class="flex flex-col items-center justify-center flex-1 min-w-0 py-1.5 text-on-surface-variant" href="cambiar-usuario.html">
+      <span class="material-symbols-outlined text-[18px]">switch_account</span>
+      <span class="text-[8px] mt-0.5 truncate">Yo</span>
+    </a>
+  </div>
+</nav>
+
+<script src="../js/supabase-client.js"></script>
+<script>
+(function(){
+  if(!localStorage.getItem('keepsake_user')){ location.replace('../index.html'); return; }
+  const user = localStorage.getItem('keepsake_user');
+  document.getElementById('user-greeting').textContent = 'HOLA, ' + user.toUpperCase();
+
+  const CAP_KEY = 'keepsake_polaroid_caps';
+  const IMG_KEY = 'keepsake_polaroid_imgs';
+  const defaults = ['Flores para ti ♡','Nosotros :)','Momentos ♡','Tu sonrisa ✨'];
+  const defaultImgs = [
+    'https://images.unsplash.com/photo-1490750967868-88aa4486c946?w=400&h=300&fit=crop',
+    'https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?w=400&h=300&fit=crop',
+    'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=400&h=300&fit=crop',
+    'https://images.unsplash.com/photo-1518199266791-5375a83190b7?w=400&h=300&fit=crop'
+  ];
+
+  let caps = defaults.slice();
+  let imgs = defaultImgs.slice();
+  try {
+    const sc = JSON.parse(localStorage.getItem(CAP_KEY) || 'null');
+    if(Array.isArray(sc) && sc.length === 4) caps = sc;
+  } catch(e){}
+  try {
+    const si = JSON.parse(localStorage.getItem(IMG_KEY) || 'null');
+    if(Array.isArray(si) && si.length === 4) imgs = si;
+  } catch(e){}
+
+  for(let i=0;i<4;i++){
+    const cap = document.getElementById('pol-cap-'+i);
+    const img = document.getElementById('pol-img-'+i);
+    if(cap) cap.textContent = caps[i];
+    if(img && imgs[i]) img.src = imgs[i];
+  }
+
+  document.querySelectorAll('.cap-edit').forEach(el=>{
+    el.addEventListener('blur', function(){
+      const i = +this.dataset.key;
+      caps[i] = (this.textContent || '').trim() || defaults[i];
+      this.textContent = caps[i];
+      localStorage.setItem(CAP_KEY, JSON.stringify(caps));
+    });
+    el.addEventListener('keydown', function(e){
+      if(e.key === 'Enter'){ e.preventDefault(); this.blur(); }
+    });
+  });
+
+  // Change polaroid photo
+  let pendingPol = null;
+  const fileInput = document.getElementById('pol-file');
+  document.querySelectorAll('.pol-img-wrap').forEach(wrap=>{
+    wrap.addEventListener('click', function(){
+      pendingPol = +this.dataset.pol;
+      fileInput.click();
+    });
+  });
+  fileInput.addEventListener('change', function(){
+    const file = this.files && this.files[0];
+    if(!file || pendingPol === null) return;
+    const reader = new FileReader();
+    const idx = pendingPol;
+    reader.onload = function(ev){
+      // compress via canvas if large
+      const dataUrl = ev.target.result;
+      const img = new Image();
+      img.onload = function(){
+        const max = 600;
+        let w = img.width, h = img.height;
+        if(w > max || h > max){
+          const r = Math.min(max/w, max/h);
+          w = Math.round(w*r); h = Math.round(h*r);
+        }
+        const c = document.createElement('canvas');
+        c.width = w; c.height = h;
+        c.getContext('2d').drawImage(img, 0, 0, w, h);
+        const out = c.toDataURL('image/jpeg', 0.82);
+        imgs[idx] = out;
+        document.getElementById('pol-img-'+idx).src = out;
+        try { localStorage.setItem(IMG_KEY, JSON.stringify(imgs)); }
+        catch(e){ alert('La imagen es muy pesada para guardar en el teléfono. Prueba una más liviana.'); }
+      };
+      img.src = dataUrl;
+    };
+    reader.readAsDataURL(file);
+    this.value = '';
+    pendingPol = null;
+  });
+
+  async function refreshChatDot(){
+    try {
+      if(!window.KeepsakeDB) return;
+      const me = (localStorage.getItem('keepsake_user')||'').toLowerCase();
+      const last = localStorage.getItem('keepsake_chat_read') || '1970-01-01';
+      const all = await window.KeepsakeDB.fetchContenidoAny(['textos']);
+      const unread = (all||[]).filter(i =>
+        (i.comentario||'')==='chat' &&
+        (i.autor||'').toLowerCase() !== me &&
+        i.created_at && i.created_at > last
+      );
+      const dot = document.getElementById('chat-dot');
+      if(dot) dot.classList.toggle('hidden', unread.length===0);
+    } catch(e){ console.warn('chat-dot', e); }
+  }
+  setTimeout(function(){
+    if(window.KeepsakeDB){
+      window.KeepsakeDB.refreshUnreadBadge();
+      refreshChatDot();
+    }
+  }, 500);
+  setInterval(function(){ if(window.KeepsakeDB) refreshChatDot(); }, 12000);
+})();
+</script>
+</body>
+</html>

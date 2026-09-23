@@ -1,248 +1,103 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#c05f74">
-<title>Nuestro Espacio</title>
-<link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="icons/icon-192.png">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css">
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
+  <title>Nuestro Espacio</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..700;1,400..700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet"/>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            surface: '#fcf9f4',
+            primary: '#944652',
+            'primary-container': '#d67b88',
+            'on-primary': '#ffffff',
+            'on-surface': '#1c1c19',
+            'on-surface-variant': '#534344',
+            'surface-container-lowest': '#ffffff'
+          },
+          fontFamily: {
+            display: ['Playfair Display', 'serif'],
+            body: ['Plus Jakarta Sans', 'sans-serif']
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    html, body { margin: 0; height: 100%; }
+    body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent; }
+    .fade-in { animation: fadeIn 0.45s ease forwards; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+  </style>
 </head>
-<body>
+<body class="bg-surface min-h-screen flex flex-col items-center justify-center relative overflow-hidden font-body text-on-surface">
+  <div class="pointer-events-none absolute inset-0">
+    <div class="absolute top-16 left-10 w-2 h-2 rounded-full bg-primary-container/30"></div>
+    <div class="absolute top-28 right-14 w-1.5 h-1.5 rounded-full bg-primary/20"></div>
+    <div class="absolute bottom-32 left-16 w-2 h-2 rounded-full bg-primary-container/25"></div>
+  </div>
 
-  <!-- ============ PANTALLA: BIENVENIDA ============ -->
-  <section id="pantalla-bienvenida" class="pantalla activa">
-    <!-- lluvia ambiental de pétalos de tulipán: se genera dinámicamente en app.js -->
-    <div id="lluvia-petalos" class="lluvia-petalos" aria-hidden="true"></div>
-
-    <div class="jardin-mini" aria-hidden="true">
-      <div id="flor-grupo" class="flor-grupo">
-        <div class="planta">
-          <div class="tallo"></div>
-          <div class="cabeza">
-            <b class="capa c1"></b><b class="capa c2"></b><b class="capa c3"></b><b class="capa c4"></b><b class="capa c5"></b>
-          </div>
-        </div>
-      </div>
+  <!-- WELCOME -->
+  <div id="screen-welcome" class="flex flex-col items-center text-center px-8 fade-in z-10">
+    <div class="w-28 h-28 rounded-2xl overflow-hidden bg-[#f5ebe0] shadow-xl mb-10 flex items-center justify-center">
+      <img src="https://images.unsplash.com/photo-1490750967868-88aa4486c946?w=300&h=300&fit=crop" alt="Rosa" class="w-full h-full object-cover"
+        onerror="this.parentElement.innerHTML='🌸'"/>
     </div>
-    <div class="bienvenida-texto">
-      <p class="ceja">un lugar solo de ustedes dos</p>
-      <h1>Nuestro<br>Espacio</h1>
-      <button id="btn-entrar" class="boton-primario">Entrar</button>
-    </div>
-  </section>
-
-  <!-- ============ PANTALLA: ¿QUIÉN ERES? ============ -->
-  <section id="pantalla-quien" class="pantalla">
-    <div class="contenedor-centrado">
-      <p class="ceja">antes de entrar</p>
-      <h2>¿Quién eres?</h2>
-      <p class="subtexto">Elige tu nombre para guardar lo que compartas con tu autoría.</p>
-      <div class="opciones-usuario">
-        <button class="tarjeta-usuario" data-usuario="alessandro">Alessandro</button>
-        <button class="tarjeta-usuario" data-usuario="ella">Mayerli</button>
-      </div>
-    </div>
-  </section>
-
-  <!-- ============ PANTALLA: APP (fondo persistente + menú lateral + hoja central) ============ -->
-  <section id="pantalla-app" class="pantalla">
-    <div class="fondo-app" aria-hidden="true">
-      <div class="fondo-flores"></div>
-    </div>
-
-    <button id="btn-menu-lateral" class="btn-hamburguesa" aria-label="Abrir menú" aria-expanded="false">
-      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+    <p class="text-[11px] tracking-[0.28em] uppercase text-primary font-semibold mb-2">Bienvenido a</p>
+    <h1 class="font-display text-4xl italic font-semibold leading-tight mb-3">Nuestro Espacio</h1>
+    <p class="text-on-surface-variant text-sm max-w-xs leading-relaxed mb-10">
+      Un rinconcito hecho con mucho cariño, solo para los dos.
+    </p>
+    <button id="btn-entrar" type="button"
+      class="inline-flex items-center gap-2 px-10 py-3.5 rounded-full bg-primary-container text-on-primary font-semibold shadow-lg active:scale-95 transition-transform">
+      Entrar
+      <span class="material-symbols-outlined text-[20px]">arrow_forward</span>
     </button>
+  </div>
 
-    <div id="fondo-lateral" class="fondo-lateral"></div>
-
-    <aside id="barra-lateral" class="barra-lateral">
-      <div class="barra-lateral-tope">
-        <div>
-          <p class="ceja" id="saludo-usuario">hola</p>
-          <h2 class="titulo-app">Nuestro Espacio</h2>
-        </div>
-        <button id="btn-cerrar-lateral" class="boton-icono" aria-label="Cerrar menú">
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 6l12 12M18 6 6 18"/></svg>
-        </button>
-      </div>
-      <nav class="lista-secciones">
-        <button class="item-seccion" data-seccion="musica">
-          <span class="icono-seccion">
-            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></svg>
-          </span>
-          <span class="info"><strong>Música</strong><small>las canciones que nos gustan</small></span>
-        </button>
-        <button class="item-seccion" data-seccion="textos">
-          <span class="icono-seccion">
-            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 6h16v12H4z"/><path d="M4 7l8 6 8-6"/></svg>
-          </span>
-          <span class="info"><strong>Cartas</strong><small>notas largas y reflexiones</small></span>
-        </button>
-        <button class="item-seccion" data-seccion="recuerdos">
-          <span class="icono-seccion">
-            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3.5" y="4.5" width="17" height="15" rx="2"/><circle cx="8.5" cy="9.5" r="1.6"/><path d="M20 15.5l-5-5-9 9"/></svg>
-          </span>
-          <span class="info"><strong>Recuerdos</strong><small>la galería de momentos</small></span>
-        </button>
-        <button class="item-seccion" data-seccion="videos">
-          <span class="icono-seccion">
-            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="6" width="13" height="12" rx="2"/><path d="M16 10l5-3v10l-5-3z"/></svg>
-          </span>
-          <span class="info"><strong>Videos</strong><small>clips para revivir</small></span>
-        </button>
-        <button class="item-seccion" data-seccion="instantaneas">
-          <span class="icono-seccion">
-            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 8h3l1.5-2h7L17 8h3v11H4z"/><circle cx="12" cy="13.5" r="3.3"/></svg>
-          </span>
-          <span class="info"><strong>Instantáneas</strong><small>el día a día, rápido</small></span>
-        </button>
-      </nav>
-      <button id="btn-notificaciones" class="item-seccion item-notificaciones" aria-label="Notificaciones">
-        <span class="icono-seccion">
-          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 10a6 6 0 0 1 12 0c0 4 1.5 5.5 2 6H4c.5-.5 2-2 2-6Z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>
-        </span>
-        <span class="info"><strong>Avisos</strong></span>
-        <span id="punto-notificacion" class="punto-notificacion oculto"></span>
+  <!-- USER SELECT — estilo captura -->
+  <div id="screen-user" class="hidden flex flex-col items-center text-center px-8 fade-in z-10 w-full max-w-sm">
+    <p class="text-[12px] tracking-wide text-on-surface-variant/80 mb-1">antes de entrar</p>
+    <h2 class="font-display text-3xl italic font-semibold mb-2 text-[#3d2a2e]">¿Quién eres?</h2>
+    <p class="text-on-surface-variant text-sm mb-8 max-w-xs leading-relaxed">
+      Elige tu nombre para guardar lo que compartas con tu autoría.
+    </p>
+    <div class="flex flex-col gap-3 w-full">
+      <button type="button" data-user="Alessandro"
+        class="user-pick w-full py-4 px-6 rounded-2xl bg-white shadow-md active:scale-[0.98] transition-all text-center">
+        <span class="font-display text-xl text-[#3d2a2e]">Alessandro</span>
       </button>
-    </aside>
-
-    <main id="tarjeta-central" class="tarjeta-central">
-      <header class="encabezado-seccion">
-        <button id="btn-volver" class="boton-icono oculto" aria-label="Inicio">
-          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M15 5 8 12l7 7"/></svg>
-        </button>
-        <h2 id="titulo-seccion">Nuestro Espacio</h2>
-        <div class="acciones-encabezado">
-          <button id="btn-seleccionar" class="boton-icono oculto" aria-label="Seleccionar">
-            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M8 12l2.5 2.5L16 9"/></svg>
-          </button>
-          <button id="btn-agregar" class="boton-icono oculto" aria-label="Agregar">
-            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 5v14M5 12h14"/></svg>
-          </button>
-        </div>
-      </header>
-
-      <div id="barra-seleccion" class="barra-seleccion oculto">
-        <span id="conteo-seleccion">0 seleccionadas</span>
-        <div class="barra-seleccion-botones">
-          <button id="btn-guardar-recuerdos" class="chip-accion oculto">Guardar en Recuerdos</button>
-          <button id="btn-descargar-seleccion" class="chip-accion">Descargar</button>
-          <button id="btn-cancelar-seleccion" class="chip-fantasma">Cancelar</button>
-        </div>
-      </div>
-
-      <div id="estado-seccion" class="estado-seccion oculto"></div>
-      <div id="contenido-seccion" class="contenido-seccion"></div>
-    </main>
-  </section>
-
-  <!-- ============ PANEL: NOTIFICACIONES ============ -->
-  <aside id="panel-notificaciones" class="panel">
-    <header class="encabezado-panel">
-      <h3>Avisos</h3>
-      <button id="btn-cerrar-notificaciones" class="boton-icono" aria-label="Cerrar">
-        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      <button type="button" data-user="Mayerli"
+        class="user-pick w-full py-4 px-6 rounded-2xl bg-white shadow-md active:scale-[0.98] transition-all text-center">
+        <span class="font-display text-xl text-[#3d2a2e]">Mayerli</span>
       </button>
-    </header>
-    <ul id="lista-notificaciones" class="lista-notificaciones"></ul>
-  </aside>
-  <div id="fondo-panel" class="fondo-panel"></div>
-
-  <!-- ============ MODAL: NUEVA PUBLICACIÓN ============ -->
-  <div id="modal-nuevo" class="modal">
-    <div class="modal-caja">
-      <header class="encabezado-panel">
-        <h3 id="titulo-modal">Agregar</h3>
-        <button id="btn-cerrar-modal" class="boton-icono" aria-label="Cerrar">
-          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 6l12 12M18 6 6 18"/></svg>
-        </button>
-      </header>
-      <form id="form-nuevo">
-        <label id="campo-titulo-wrap" class="campo">
-          <span>Título</span>
-          <input type="text" id="campo-titulo" placeholder="Nombre de la canción o recuerdo">
-        </label>
-        <label id="campo-archivo-wrap" class="campo">
-          <span id="etiqueta-archivo">Archivo</span>
-          <input type="file" id="campo-archivo">
-          <small class="ayuda-campo">Se sube al almacenamiento en la nube (bucket «media»).</small>
-        </label>
-        <label id="campo-youtube-wrap" class="campo oculto">
-          <span>Enlace de YouTube</span>
-          <input type="url" id="campo-youtube" placeholder="https://youtube.com/watch?v=...">
-        </label>
-        <label id="campo-mensaje-wrap" class="campo">
-          <span id="etiqueta-mensaje">Mensaje</span>
-          <textarea id="campo-mensaje" rows="5" placeholder="Escribe aquí..."></textarea>
-        </label>
-        <label id="campo-letra-wrap" class="campo oculto">
-          <span>Letra (opcional)</span>
-          <textarea id="campo-letra" rows="6" placeholder="Si quieres, pega o escribe aquí la letra para que aparezca mientras suena la canción."></textarea>
-          <small class="ayuda-campo">Es tu propio texto — se muestra solo dentro de su espacio privado.</small>
-        </label>
-        <label id="campo-comentario-wrap" class="campo oculto">
-          <span>Comentario (opcional)</span>
-          <input type="text" id="campo-comentario" maxlength="140" placeholder="Ej: Esta canción me recuerda a usted">
-          <small class="ayuda-campo">Aparece junto a la letra. Si lo dejas vacío, esa parte no se muestra.</small>
-        </label>
-        <p id="error-form" class="texto-error oculto"></p>
-        <button type="submit" id="btn-publicar" class="boton-primario">Publicar</button>
-      </form>
     </div>
   </div>
 
-  <!-- ============ COMPOSITOR: NUEVA INSTANTÁNEA (estilo historia) ============ -->
-  <div id="compositor-instantanea" class="compositor">
-    <button id="btn-cerrar-compositor" class="boton-icono compositor-cerrar" aria-label="Cerrar">
-      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#fff" stroke-width="1.8"><path d="M6 6l12 12M18 6 6 18"/></svg>
-    </button>
-
-    <!-- paso 1: elegir cómo conseguir la foto -->
-    <div id="compositor-elegir" class="compositor-paso compositor-elegir">
-      <p class="compositor-titulo">Una instantánea para {{OTRO}}</p>
-      <div class="compositor-opciones">
-        <button id="btn-tomar-foto" class="opcion-captura opcion-captura-unica">
-          <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 8h3l1.5-2h7L17 8h3v11H4z"/><circle cx="12" cy="13.5" r="3.3"/></svg>
-          <span>Tomar foto ahora</span>
-        </button>
-      </div>
-      <input type="file" id="entrada-camara" accept="image/*" capture="environment" class="oculto">
-    </div>
-
-    <!-- paso 2: previsualización con mensaje encima, tipo historia -->
-    <div id="compositor-previa" class="compositor-paso compositor-previa oculto">
-      <img id="previa-imagen" alt="">
-      <div class="previa-degradado"></div>
-      <textarea id="previa-texto" class="previa-texto" rows="2" placeholder="Escribe algo bonito para este momento…" maxlength="140"></textarea>
-      <div class="previa-acciones">
-        <button id="btn-repetir-foto" class="boton-fantasma">Cambiar foto</button>
-        <button id="btn-publicar-instantanea" class="boton-primario">Compartir</button>
-      </div>
-    </div>
-    <p id="error-compositor" class="texto-error error-compositor oculto"></p>
-  </div>
-
-  <!-- ============ VISOR DE MEDIA (lightbox) ============ -->
-  <div id="visor" class="visor">
-    <button id="btn-cerrar-visor" class="boton-icono visor-cerrar" aria-label="Cerrar">
-      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 6l12 12M18 6 6 18"/></svg>
-    </button>
-    <div id="visor-contenido" class="visor-contenido"></div>
-    <div id="visor-meta" class="visor-meta"></div>
-  </div>
-
-  <!-- ============ WIDGETS FLOTANTES (avisos en vivo) ============ -->
-  <div id="widgets-flotantes" aria-live="polite"></div>
-
-  <script type="module" src="js/supabase-client.js"></script>
-  <script type="module" src="js/app.js"></script>
+  <script>
+    (function () {
+      if (localStorage.getItem('keepsake_user')) {
+        location.replace('pages/inicio.html');
+        return;
+      }
+      const welcome = document.getElementById('screen-welcome');
+      const userScreen = document.getElementById('screen-user');
+      document.getElementById('btn-entrar').addEventListener('click', function () {
+        welcome.classList.add('hidden');
+        userScreen.classList.remove('hidden');
+      });
+      document.querySelectorAll('.user-pick').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          localStorage.setItem('keepsake_user', btn.getAttribute('data-user'));
+          location.replace('pages/inicio.html');
+        });
+      });
+    })();
+  </script>
 </body>
 </html>

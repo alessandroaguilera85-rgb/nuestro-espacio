@@ -115,7 +115,9 @@ html,body{margin:0;width:100%;overflow-x:hidden}body{overscroll-behavior:none;ba
   function kindOf(item){
     const c=(item.comentario||'').toLowerCase();
     const t=(item.titulo||'').toLowerCase();
-    if(c==='chat' || t==='chat' || t==='audio') return 'chat';
+    if(c==='chat' || t==='chat' || t==='audio') return 'skip';
+    if(c==='webrtc' || c==='chat_bg' || ['offer','answer','ice','hangup','fondo','sticker'].includes(t)) return 'skip';
+    if((item.mensaje||'').indexOf('"candidate"')>=0 || (item.mensaje||'').indexOf('"sdp"')>=0) return 'skip';
     if(c==='mensajito') return 'mensajito';
     return 'carta';
   }

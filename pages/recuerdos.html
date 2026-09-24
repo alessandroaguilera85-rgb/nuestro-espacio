@@ -80,7 +80,7 @@ html,body{margin:0;width:100%;overflow-x:hidden}body{overscroll-behavior:none;ba
   <div class="bg-white rounded-t-3xl sm:rounded-3xl w-full max-w-md max-h-[92vh] overflow-y-auto shadow-xl">
     <div class="relative bg-[#1c1c19]">
       <img id="det-img" class="w-full max-h-[50vh] object-contain mx-auto" alt=""/>
-      <video id="det-vid" class="w-full max-h-[50vh] object-contain mx-auto hidden" controls playsinline></video>
+      <video id="det-vid" class="w-full max-h-[50vh] object-contain mx-auto hidden" controls playsinline webkit-playsinline preload="metadata"></video>
       <button id="det-close" type="button" class="absolute top-3 right-3 w-9 h-9 rounded-full bg-black/40 text-white flex items-center justify-center">
         <span class="material-symbols-outlined">close</span>
       </button>
@@ -178,12 +178,20 @@ html,body{margin:0;width:100%;overflow-x:hidden}body{overscroll-behavior:none;ba
     const vid=isVideo(current);
     const img=document.getElementById('det-img');
     const vEl=document.getElementById('det-vid');
+    const raw=current.url_archivo||'';
+    const apply=async(el,isVid)=>{
+      let src=raw;
+      if(/\.e2ee/i.test(raw) && window.KeepsakeDB.resolveMedia) src=await window.KeepsakeDB.resolveMedia(raw);
+      el.src=src||'';
+    };
     if(vid){
       img.classList.add('hidden'); img.removeAttribute('src');
-      vEl.classList.remove('hidden'); vEl.src=current.url_archivo||'';
+      vEl.classList.remove('hidden');
+      apply(vEl,true);
     } else {
       vEl.classList.add('hidden'); vEl.removeAttribute('src');
-      img.classList.remove('hidden'); img.src=current.url_archivo||'';
+      img.classList.remove('hidden');
+      apply(img,false);
     }
     document.getElementById('det-titulo').value=current.titulo||'';
     document.getElementById('det-mensaje').value=current.mensaje||'';

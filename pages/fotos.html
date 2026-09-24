@@ -138,11 +138,16 @@ html,body{margin:0;width:100%;overflow-x:hidden}body{overscroll-behavior:none;ba
         <p class="text-xs text-on-surface-variant mt-1">${esc(item.autor)||''} · ${window.KeepsakeDB.formatFullDate(item.created_at)}</p></div></div>`).join('');
     }
     listEl.querySelectorAll('.item-card').forEach(el=>el.addEventListener('click',()=>openDetail(el.dataset.id)));
+    if(window.KeepsakeDB.hydrateMedia) window.KeepsakeDB.hydrateMedia(listEl);
   }
 
   function openDetail(id){
     current=items.find(i=>i.id===id); if(!current) return;
-    document.getElementById('det-img').src=current.url_archivo||'';
+    const img=document.getElementById('det-img');
+    img.src=current.url_archivo||'';
+    if(window.KeepsakeDB.resolveMedia && /\.e2ee/i.test(current.url_archivo||'')){
+      window.KeepsakeDB.resolveMedia(current.url_archivo).then(u=>{ if(u) img.src=u; });
+    }
     document.getElementById('det-titulo').value=current.titulo||'';
     document.getElementById('det-meta').textContent=(current.autor||'')+' · '+window.KeepsakeDB.formatFullDate(current.created_at);
     const dl=document.getElementById('det-download');

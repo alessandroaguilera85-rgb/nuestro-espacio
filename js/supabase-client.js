@@ -164,7 +164,8 @@ async function uploadFile(file, folder = 'uploads', opts = {}) {
   let body = file;
   let ext = (file.name && file.name.split('.').pop()) || 'jpg';
   let contentType = file.type || 'image/jpeg';
-  if (e2f && e2f.isUnlocked() && !opts.plain) {
+  // Fotos/videos se suben en claro: el celular no puede pintar .e2ee en <img>/<video>
+  if (opts.encrypt && e2f && e2f.isUnlocked() && !opts.plain) {
     const buf = await file.arrayBuffer();
     const packed = await e2f.encryptBytes(buf);
     if (packed) {
@@ -324,7 +325,14 @@ async function resolveMedia(url) {
     const buf = new Uint8Array(await res.arrayBuffer());
     const raw = await e2.decryptBytes(buf);
     if (!raw) return url;
-    const blob = new Blob([raw]);
+    const head = new Uint8Array(raw.slice(0, 12));
+    let mime = 'application/octet-stream';
+    if (head[0]===0xFF && head[1]===0xD8) mime='image/jpeg';
+    else if (head[0]===0x89 && head[1]===0x50) mime='image/png';
+    else if (head[0]===0x47 && head[1]===0x49) mime='image/gif';
+    else if (head[4]===0x66 && head[5]===0x74 && head[6]===0x79 && head[7]===0x70) mime='video/mp4';
+    else if (head[0]===0x1A && head[1]===0x45) mime='video/webm';
+    const blob = new Blob([raw], {type: mime});
     return URL.createObjectURL(blob);
   } catch (e) {
     console.warn('resolveMedia', e);
@@ -355,6 +363,17 @@ window.KeepsakeDB = {
   refreshUnreadBadge,
   errMsg,
   resolveMedia,
+  hydrateMedia: async (root) => {
+    const scope = root || document;
+    const els = scope.querySelectorAll('img[src], video[src], audio[src]');
+    for (const el of els) {
+      const u = el.getAttribute('src') || '';
+      if (/\.e2ee/i.test(u)) {
+        const next = await resolveMedia(u);
+        if (next && next !== u) el.src = next;
+      }
+    }
+  },
   requireUnlock: async () => {
     const e2 = await loadE2ee();
     if (e2) return e2.requireUnlock();
